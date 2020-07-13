@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace get_new_words
 {
@@ -21,12 +22,23 @@ namespace get_new_words
             Console.WriteLine("Start");
             var path_to_file_txt = args[0];
             var t1 = await File.ReadAllTextAsync(path_to_file_txt);
+
+            var w1000_1 = await new HttpClient().GetAsync("https://raw.githubusercontent.com/rlopezlu/english-word-list/master/wordList.raw");
+            var w1000_2 = await w1000_1.Content.ReadAsStringAsync();
+            var w1000 = w1000_2.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ")
+                .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                .Where(word =>
+                    !word.Any(lr =>
+                        char.IsDigit(lr))).ToArray();
+            Console.WriteLine("w1000 count = " + w1000.Count());
+
             var t2 = t1.Replace(".", " ").Replace(",", " ").Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ")
                 //.Split(" ", StringSplitOptions.RemoveEmptyEntries)
                 .GetWordsOrPhrases()
                 .GroupBy(_ => _.ToUpper()).Select(_ => _.First())
                 //.Distinct()
                 .Where(_ => _.Length > 2)
+                .Where(_ => !w1000.Contains(_))
                 .Where(word =>
                     !word.Any(lr =>
                         char.IsDigit(lr)));
